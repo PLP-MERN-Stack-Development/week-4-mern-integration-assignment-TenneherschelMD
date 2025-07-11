@@ -1,101 +1,30 @@
-// server/models/Post.js
-
+// models/Post.js
 import mongoose from 'mongoose';
 
-const PostSchema = new mongoose.Schema(
+const postSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: [true, 'Please provide a title'],
+      required: [true, 'Post title is required'],
       trim: true,
-      maxlength: [100, 'Title cannot be more than 100 characters'],
     },
-    content: {
+    body: {
       type: String,
-      required: [true, 'Please provide content'],
-    },
-    featuredImage: {
-      type: String,
-      default: 'default-post.jpg',
-    },
-    slug: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    excerpt: {
-      type: String,
-      maxlength: [200, 'Excerpt cannot be more than 200 characters'],
-    },
-    author: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
+      required: [true, 'Post body is required'],
     },
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Category',
-      required: true,
+      required: [true, 'Category is required'],
     },
-    tags: [String],
-    isPublished: {
-      type: Boolean,
-      default: false,
+    featuredImage: {
+      type: String,
+      default: '', // Will be set if an image is uploaded
     },
-    viewCount: {
-      type: Number,
-      default: 0,
-    },
-    comments: [
-      {
-        user: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'User',
-        },
-        content: {
-          type: String,
-          required: true,
-        },
-        createdAt: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-// Slug generation middleware
-PostSchema.pre('save', function (next) {
-  if (!this.isModified('title')) {
-    return next();
-  }
-
-  this.slug = this.title
-    .toLowerCase()
-    .replace(/[^\w ]+/g, '')
-    .replace(/ +/g, '-');
-
-  next();
-});
-
-// Virtual URL field
-PostSchema.virtual('url').get(function () {
-  return `/posts/${this.slug}`;
-});
-
-// Comment adder
-PostSchema.methods.addComment = function (userId, content) {
-  this.comments.push({ user: userId, content });
-  return this.save();
-};
-
-// View counter
-PostSchema.methods.incrementViewCount = function () {
-  this.viewCount += 1;
-  return this.save();
-};
-
-const Post = mongoose.model('Post', PostSchema);
-export default Post;
+export default mongoose.model('Post', postSchema);
