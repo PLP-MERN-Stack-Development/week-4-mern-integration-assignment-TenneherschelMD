@@ -1,10 +1,25 @@
 import Post from '../models/Post.js';
 
-// @desc    Get all posts
+// @desc    Get all posts with pagination
 export const getPosts = async (req, res) => {
   try {
-    const posts = await Post.find().populate('category');
-    res.json(posts);
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
+
+    const posts = await Post.find()
+      .populate('category')
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    const total = await Post.countDocuments();
+
+    res.json({
+      posts,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
